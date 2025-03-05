@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marcador y Contador</title>
+    <link href="https://fonts.googleapis.com/css2?family=Teko:wght@500&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Teko', sans-serif;
+            text-align: center;
+            background-color: white;
+            color: black;
+        }
+        .container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 50px;
+        }
+        .box {
+            padding: 20px;
+            border-radius: 15px;
+            width: 250px;
+        }
+        .control-tiempo {
+            background-color: #4B0082;
+            color: white;
+        }
+        .tiempo-extra {
+            background-color: #d32f2f;
+            color: white;
+        }
+        .marcador {
+            background-color: #d32f2f;
+            color: white;
+        }
+        .control-texto {
+            background-color: #009688;
+            color: white;
+        }
+        .marcador-texto, #contador {
+            font-size: 80px;
+            font-weight: bold;
+            transition: font-size 0.3s ease;
+        }
+        #contador-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+        #tiempo-extra {
+            font-size: 40px;
+            color: red;
+            font-weight: bold;
+            transition: font-size 0.3s ease;
+        }
+        button {
+            display: block;
+            width: 100%;
+            margin: 10px 0;
+            padding: 10px;
+            font-size: 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        button:hover {
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <h1>Marcador y Contador</h1>
+    <div id="contador-container">
+        <div id="contador">00:00</div>
+        <div id="tiempo-extra"></div>
+    </div>
+    <div class="marcador-texto" id="marcador">0 - 0</div>
+    <div class="container">
+        <!-- Control de Tiempo -->
+        <div class="box control-tiempo">
+            <h2>CONTROL DE TIEMPO</h2>
+            <button onclick="iniciarCronometro()">Iniciar</button>
+            <button onclick="pausarCronometro()">Pausar</button>
+            <button onclick="reiniciarCronometro()">Reiniciar</button>
+            <button onclick="cambiarTiempo()">Cambiar Tiempo</button>
+        </div>
+        
+        <!-- Tiempo Extra -->
+        <div class="box tiempo-extra">
+            <h2>TIEMPO EXTRA</h2>
+            <button onclick="agregarTiempoExtra(1)">+1 Minuto Extra</button>
+            <button onclick="agregarTiempoExtra(-1)">-1 Minuto Extra</button>
+            <button onclick="reiniciarTiempoExtra()">Reiniciar Extra</button>
+        </div>
+        
+        <!-- Marcador -->
+        <div class="box marcador">
+            <h2>MARCADOR</h2>
+            <button onclick="modificarMarcador(1, 0)">+ Gol Local</button>
+            <button onclick="modificarMarcador(-1, 0)">- Gol Local</button>
+            <button onclick="modificarMarcador(0, 1)">+ Gol Visitante</button>
+            <button onclick="modificarMarcador(0, -1)">- Gol Visitante</button>
+            <button onclick="reiniciarMarcador()">Reiniciar Marcador</button>
+        </div>
+        
+        <!-- Control de Tamaño de Texto -->
+        <div class="box control-texto">
+            <h2>CONTROL DE TEXTO</h2>
+            <button onclick="ajustarTexto(1.1)">Aumentar Tamaño</button>
+            <button onclick="ajustarTexto(0.9)">Disminuir Tamaño</button>
+            <button onclick="ajustarTexto(1)">Restablecer Tamaño</button>
+        </div>
+    </div>
+
+    <script>
+        let minutos = 0, segundos = 0, tiempoExtra = 0;
+        let cronometroActivo = false;
+        let intervalo;
+        let local = 0, visitante = 0;
+        let segundoTiempo = false;
+        const tamañoInicial = 80; // Tamaño inicial del texto
+
+        function actualizarCronometro() {
+            let tiempo = `${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}`;
+            document.getElementById("contador").textContent = tiempo;
+            document.getElementById("tiempo-extra").textContent = tiempoExtra !== 0 ? `+${tiempoExtra}` : "";
+        }
+
+        function iniciarCronometro() {
+            if (!cronometroActivo) {
+                cronometroActivo = true;
+                intervalo = setInterval(() => {
+                    segundos++;
+                    if (segundos === 60) {
+                        segundos = 0;
+                        minutos++;
+                    }
+                    // Detener el cronómetro al llegar a 45 minutos
+                    if (!segundoTiempo && minutos === 45) {
+                        pausarCronometro();
+                    } else if (segundoTiempo && minutos === 90) {
+                        pausarCronometro();
+                    }
+                    actualizarCronometro();
+                }, 1000);
+            }
+        }
+
+        function pausarCronometro() {
+            clearInterval(intervalo);
+            cronometroActivo = false;
+        }
+
+        function reiniciarCronometro() {
+            pausarCronometro();
+            minutos = segundoTiempo ? 45 : 0;
+            segundos = 0;
+            tiempoExtra = 0;
+            actualizarCronometro();
+        }
+
+        function cambiarTiempo() {
+            segundoTiempo = !segundoTiempo;
+            reiniciarCronometro();
+        }
+
+        function agregarTiempoExtra(valor) {
+            tiempoExtra = Math.max(0, tiempoExtra + valor);
+            actualizarCronometro();
+        }
+
+        function reiniciarTiempoExtra() {
+            tiempoExtra = 0;
+            actualizarCronometro();
+        }
+
+        function modificarMarcador(cambioLocal, cambioVisitante) {
+            local = Math.max(0, local + cambioLocal);
+            visitante = Math.max(0, visitante + cambioVisitante);
+            document.getElementById("marcador").textContent = `${local} - ${visitante}`;
+        }
+
+        function reiniciarMarcador() {
+            local = 0;
+            visitante = 0;
+            document.getElementById("marcador").textContent = "0 - 0";
+        }
+
+        function ajustarTexto(escala) {
+            let marcadorTexto = document.getElementById("marcador");
+            let contador = document.getElementById("contador");
+            let tiempoExtraTexto = document.getElementById("tiempo-extra");
+
+            if (escala === 1) {
+                // Restablecer al tamaño inicial
+                marcadorTexto.style.fontSize = `${tamañoInicial}px`;
+                contador.style.fontSize = `${tamañoInicial}px`;
+                tiempoExtraTexto.style.fontSize = `${tamañoInicial * 0.5}px`; // Tiempo extra más pequeño
+            } else {
+                // Ajustar el tamaño proporcionalmente
+                let estiloActual = window.getComputedStyle(marcadorTexto).fontSize;
+                let tamañoActual = parseFloat(estiloActual);
+                marcadorTexto.style.fontSize = `${tamañoActual * escala}px`;
+                contador.style.fontSize = `${tamañoActual * escala}px`;
+                tiempoExtraTexto.style.fontSize = `${tamañoActual * escala * 0.5}px`; // Tiempo extra más pequeño
+            }
+        }
+    </script>
+</body>
+</html>
